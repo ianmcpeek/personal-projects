@@ -13,7 +13,17 @@ import model.Compass;
 
 public class Python {
 	
-	public static void drawHead(GraphicsContext gc, Compass dir, Point2D pos) {
+	Image head;
+	Image body;
+	Image tail;
+	
+	Python() {
+		head = new Image("file:snake_head.png");
+		body = new Image("file:snake_body.png");
+		tail = new Image("file:snake_tail.png");
+	}
+	
+	public void drawHead(GraphicsContext gc, Compass dir, Point2D pos) {
 //		switch(dir) {
 //			case NORTH:
 //				 gc.fillPolygon(new double[]{pos.getX(), pos.getX()+(Board.PIXEL_SIZE/2), pos.getX()+(Board.PIXEL_SIZE)}, 
@@ -32,23 +42,20 @@ public class Python {
 //				 		new double[]{pos.getY(), pos.getY()+(Board.PIXEL_SIZE/2), pos.getY()+(Board.PIXEL_SIZE)}, 3);
 //				break;
 //		}
-		Image img = new Image("file:snake_head.png");
-		gc.drawImage(img, pos.getX(), pos.getY(), Board.PIXEL_SIZE, Board.PIXEL_SIZE);
+		gc.drawImage(head, pos.getX(), pos.getY(), Board.PIXEL_SIZE, Board.PIXEL_SIZE);
 		
 	}
 	
-	public static void drawBody(GraphicsContext gc, Point2D pos) {
+	public void drawBody(GraphicsContext gc, Point2D pos) {
 //		 gc.fillOval(pos.getX(), pos.getY(), 
 //				 Board.PIXEL_SIZE, Board.PIXEL_SIZE);
-		Image img = new Image("file:snake_body.png");
-		gc.drawImage(img, pos.getX(), pos.getY(), Board.PIXEL_SIZE, Board.PIXEL_SIZE);
+		gc.drawImage(body, pos.getX(), pos.getY(), Board.PIXEL_SIZE, Board.PIXEL_SIZE);
 	}
 
-	public static void drawTail(GraphicsContext gc, Compass dir, Point2D pos) {
+	public void drawTail(GraphicsContext gc, Compass dir, Point2D pos) {
 		//switch(dir) {}
 		//gc.fillArc(pos.getX(), pos.getY(), Board.PIXEL_SIZE, Board.PIXEL_SIZE, 315, 270, ArcType.ROUND);
-		Image img = new Image("file:snake_tail.png");
-		gc.drawImage(img, pos.getX(), pos.getY(), Board.PIXEL_SIZE, Board.PIXEL_SIZE);
+		gc.drawImage(tail, pos.getX(), pos.getY(), Board.PIXEL_SIZE, Board.PIXEL_SIZE);
 	}
 	
 	public static void drawFruit(GraphicsContext gc, Point2D pos, String color) {

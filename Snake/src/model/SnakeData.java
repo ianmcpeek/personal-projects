@@ -7,18 +7,19 @@ import javafx.geometry.Point2D;
 
 public class SnakeData {
 
-	//snake head bitboard
-	//snake body bitboard
-	//fruit bitboard
-	
+	//Determines how much snake will grow
 	private static final int FOOD_NUTRITION = 3;
-	
+	//Indicates current snake direction
 	private Compass dir;
+	//Collection of points on virtual grid snake is occupying
 	private ArrayList<Point2D> snake;
+	//Stores current fruit location
 	private Point2D fruit;
+	//Used to determine if snake is still growing
 	private int delay;
-	
+	//Used to check whether fruit is occupying a particular spot (could combine with sBitBoard)
 	private boolean[][] fBitBoard;
+	//Used to check whether snake is occupying a particular spot
 	private boolean[][] sBitBoard;
 	
 	
@@ -71,6 +72,9 @@ public class SnakeData {
 		return snake;
 	}
 	
+	/*
+	 * Moves snake to the given new location, growing if delay is above 0
+	 */
 	public void moveSnake(Point2D newPos) {
 		Point2D tail = snake.get(snake.size()-1);
 		
@@ -88,11 +92,15 @@ public class SnakeData {
 		}
 	}
 	
+	/*
+	 * places fruit in a new randomized location and returns the location.
+	 */
 	public Point2D dropFruit() {
-		//TODO: make sure fruit can't spawn on snake
 		int rx, ry;
-		rx = (int)(Math.random()*Board.BOARD_SIZE);
-		ry = (int)(Math.random()*Board.BOARD_SIZE);
+		do {
+			rx = (int)(Math.random()*Board.BOARD_SIZE);
+			ry = (int)(Math.random()*Board.BOARD_SIZE);
+		} while(sBitBoard[rx][ry]);
 		fBitBoard[rx][ry] = true;
 		//System.out.println("fruit: x " + rx + " y " + ry);
 		return new Point2D(rx*Board.PIXEL_SIZE, ry*Board.PIXEL_SIZE);

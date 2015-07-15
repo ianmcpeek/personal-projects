@@ -34,10 +34,14 @@ public class Board extends Application{
 	public static final int PIXEL_SIZE = 20;
 	public static final int BOARD_SIZE = 30;
 	public static final int CANVAS_SIZE = PIXEL_SIZE * BOARD_SIZE;
+	private static final int SPEED_BASE = 100;//SPEED BOOST NOT WORKING
+	private static final int SPEED_MULT = 20;
 	private static boolean inpDisabled;
 	private SnakeData snake;
+	private Python python;
 	private Compass usrDir = Compass.NORTH;
 	private Timeline timeline;
+	private int speedup;
 	
 	//Paint Assets
 	ArrayList<String> colors;
@@ -53,8 +57,10 @@ public class Board extends Application{
 		}
     	
     	fColor = "AQUA";
+    	speedup = 0;
+    	python = new Python();
     	
-    	primaryStage.setTitle("Hello World!");
+    	primaryStage.setTitle("Snake Eat Snake");
     	Scene scene = new Scene(new VBox(), CANVAS_SIZE, CANVAS_SIZE+50);
     	
     	MenuBar menubar = new MenuBar();
@@ -91,7 +97,7 @@ public class Board extends Application{
         //TIMER
         
         timeline = new Timeline(new KeyFrame(
-    	        Duration.millis(100),
+    	        Duration.millis(SPEED_BASE),
     	        ae -> advanceSnake(gcSnake, gcFruit, snake.getSnake().get(0))));//paintSplatter(gcFruit, colors, new Point2D(30, 30))));
     	timeline.setCycleCount(Animation.INDEFINITE);
     	timeline.play();
@@ -146,17 +152,14 @@ public class Board extends Application{
 	 snake = new SnakeData(spwPos);
 	 
 	 //draw snake head, body, tail
-	 Python.drawHead(gc, snake.getDirection(), snake.getSnake().get(0));
-	 Python.drawBody(gc, snake.getSnake().get(1));
-	 Python.drawTail(gc, snake.getDirection(), snake.getSnake().get(2));
+	 python.drawHead(gc, snake.getDirection(), snake.getSnake().get(0));
+	 python.drawBody(gc, snake.getSnake().get(1));
+	 python.drawTail(gc, snake.getDirection(), snake.getSnake().get(2));
  }
  
  public void advanceSnake(GraphicsContext gc, GraphicsContext gcFruit, Point2D currPos) {
 	 inpDisabled = true;
-	 //check if user input is valid
-	 //if(usrDir != Compass.opposite(snake.getDirection())) {
-		 snake.setDirection(usrDir);
-	 //}
+	 snake.setDirection(usrDir);
 	 
 	 Point2D nextPos = SnakeData.nextPosition(snake.getDirection(), currPos);
 	 //check for collision
@@ -170,10 +173,10 @@ public class Board extends Application{
 	 	//-draw body over old head
 	 	//-erase old tail
 	 	//-draw new tail over old body
-	 	Python.drawHead(gc, snake.getDirection(), nextPos);
+	 	python.drawHead(gc, snake.getDirection(), nextPos);
 	 	gc.clearRect(snake.getSnake().get(0).getX(), snake.getSnake().get(0).getY(), 
 	 			PIXEL_SIZE, PIXEL_SIZE);
-	 	Python.drawBody(gc, snake.getSnake().get(0));
+	 	python.drawBody(gc, snake.getSnake().get(0));
 	 	
 	 	if(snake.getDelay()==0) {
 	 		gc.clearRect(snake.getSnake().get(snake.getSnake().size()-1).getX(), 
@@ -185,7 +188,7 @@ public class Board extends Application{
 		 	gc.clearRect(snake.getSnake().get(snake.getSnake().size()-1).getX(), 
 		 			snake.getSnake().get(snake.getSnake().size()-1).getY(), 
 		 			PIXEL_SIZE, PIXEL_SIZE);
-		 	Python.drawTail(gc, snake.getDirection(), snake.getSnake().get(snake.getSnake().size()-1));
+		 	python.drawTail(gc, snake.getDirection(), snake.getSnake().get(snake.getSnake().size()-1));
 		 	//increment snake bitboard
 	 	} else {
 	 		snake.moveSnake(nextPos);
@@ -208,6 +211,7 @@ public class Board extends Application{
 		 Python.paintSplatter(gc, color, pos);
 		 fColor = Python.pickFruitColor(colors, fColor);
 		 placeFruit(gc);
+		 //speedBoost();
 	 }
  }
  
@@ -230,5 +234,14 @@ public class Board extends Application{
 
 	 }
  }
+ 
+// public void speedBoost() {
+//	 if((speedup+1)*SPEED_MULT<SPEED_BASE) {
+//		 speedup++;
+//	 }
+//	 timeline.pause();
+//	 timeline.setDelay(Duration.millis(SPEED_BASE-(SPEED_MULT*speedup)));
+//	 timeline.play();
+// }
 
 }
