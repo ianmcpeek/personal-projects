@@ -1,24 +1,19 @@
 package view;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Scanner;
 
-import model.Compass;
-import model.SnakeData;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Button;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
@@ -26,9 +21,10 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.scene.shape.ArcType;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import model.Compass;
+import model.SnakeData;
 
 public class Board extends Application{
 	
@@ -38,15 +34,22 @@ public class Board extends Application{
 	private static boolean inpDisabled;
 	private SnakeData snake;
 	private Compass usrDir = Compass.NORTH;
+	private Timeline timeline;
+	
+	//Paint Assets
+	ArrayList<String> colors;
+	String fColor;
 	
     @Override
-    public void start(Stage primaryStage) throws FileNotFoundException {
+    public void start(Stage primaryStage) {
+    	try {
+			colors = Python.generateColors();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     	
-    	ArrayList<String> colors = new ArrayList<String>();
-    	Scanner scan = new Scanner(new File("colors.txt"));
-    	while(scan.hasNext()) {
-    		colors.add(scan.next());
-    	}
+    	fColor = "AQUA";
     	
     	primaryStage.setTitle("Hello World!");
     	Scene scene = new Scene(new VBox(), CANVAS_SIZE, CANVAS_SIZE+50);
@@ -66,26 +69,27 @@ public class Board extends Application{
         Canvas fruitLayer = new Canvas(CANVAS_SIZE, CANVAS_SIZE);
         GraphicsContext gcFruit = fruitLayer.getGraphicsContext2D();
         border.setCenter(new Pane(fruitLayer,snakeLayer));
-        Button btn = new Button();
-        btn.setText("Draw like a PIIUMP!!");
-        border.setBottom(btn);
-        placeSnake(gcSnake, new Point2D((CANVAS_SIZE)/2, 
+        //Button btn = new Button();
+        //btn.setText("Draw like a PIIUMP!!");
+        //border.setBottom(btn);
+        placeSnake(gcSnake, new Point2D((BOARD_SIZE/2)*PIXEL_SIZE, 
         		CANVAS_SIZE-(PIXEL_SIZE*4)));
-        btn.setOnAction(new EventHandler<ActionEvent>() {
- 
-            @Override
-            public void handle(ActionEvent event) {
-            	int rx = (int)(Math.random()*CANVAS_SIZE);
-            	int ry = (int)(Math.random()*CANVAS_SIZE);
-            	paintSplatter(gcFruit, colors, new Point2D(rx, ry));
-            }
-        });
+        placeFruit(gcFruit);
+//        btn.setOnAction(new EventHandler<ActionEvent>() {
+// 
+//            @Override
+//            public void handle(ActionEvent event) {
+//            	int rx = (int)(Math.random()*CANVAS_SIZE);
+//            	int ry = (int)(Math.random()*CANVAS_SIZE);
+//            	paintSplatter(gcFruit, "DARKBLUE", new Point2D(rx, ry));
+//            }
+//        });
         
         //TIMER
         
-        Timeline timeline = new Timeline(new KeyFrame(
+        timeline = new Timeline(new KeyFrame(
     	        Duration.millis(100),
-    	        ae -> advanceSnake(gcSnake, snake.getSnake().get(0))));//paintSplatter(gcFruit, colors, new Point2D(30, 30))));
+    	        ae -> advanceSnake(gcSnake, gcFruit, snake.getSnake().get(0))));//paintSplatter(gcFruit, colors, new Point2D(30, 30))));
     	timeline.setCycleCount(Animation.INDEFINITE);
     	timeline.play();
         
@@ -136,7 +140,7 @@ public class Board extends Application{
 	 Python.drawTail(gc, snake.getDirection(), snake.getSnake().get(2));
  }
  
- public void advanceSnake(GraphicsContext gc, Point2D currPos) {
+ public void advanceSnake(GraphicsContext gc, GraphicsContext gcFruit, Point2D currPos) {
 	 inpDisabled = true;
 	 //check if user input is valid
 	 if(usrDir != Compass.opposite(snake.getDirection())) {
@@ -145,6 +149,8 @@ public class Board extends Application{
 	 
 	 Point2D nextPos = SnakeData.nextPosition(snake.getDirection(), currPos);
 	 //check for collision
+	 	eatFruit(gcFruit, fColor, currPos);
+	 	eatSelf(nextPos);
 	 	//if collision draw animation
 	 //advance snake in current direction
 	 	//decrement delay if > 0
@@ -157,55 +163,54 @@ public class Board extends Application{
 	 	gc.clearRect(snake.getSnake().get(0).getX(), snake.getSnake().get(0).getY(), 
 	 			PIXEL_SIZE, PIXEL_SIZE);
 	 	Python.drawBody(gc, snake.getSnake().get(0));
-	 	snake.getSnake().add(0, nextPos);
-	 
-	 	gc.clearRect(snake.getSnake().get(snake.getSnake().size()-1).getX(), 
-	 			snake.getSnake().get(snake.getSnake().size()-1).getY(), 
-	 			PIXEL_SIZE, PIXEL_SIZE);
-	 	snake.getSnake().remove(snake.getSnake().size()-1);
-	 	gc.clearRect(snake.getSnake().get(snake.getSnake().size()-1).getX(), 
-	 			snake.getSnake().get(snake.getSnake().size()-1).getY(), 
-	 			PIXEL_SIZE, PIXEL_SIZE);
-	 	Python.drawTail(gc, snake.getDirection(), snake.getSnake().get(snake.getSnake().size()-1));
-	 	//increment snake bitboard
+	 	
+	 	if(snake.getDelay()==0) {
+	 		gc.clearRect(snake.getSnake().get(snake.getSnake().size()-1).getX(), 
+		 			snake.getSnake().get(snake.getSnake().size()-1).getY(), 
+		 			PIXEL_SIZE, PIXEL_SIZE);
+
+		 	//move snake
+		 	snake.moveSnake(nextPos);
+		 	gc.clearRect(snake.getSnake().get(snake.getSnake().size()-1).getX(), 
+		 			snake.getSnake().get(snake.getSnake().size()-1).getY(), 
+		 			PIXEL_SIZE, PIXEL_SIZE);
+		 	Python.drawTail(gc, snake.getDirection(), snake.getSnake().get(snake.getSnake().size()-1));
+		 	//increment snake bitboard
+	 	} else {
+	 		snake.moveSnake(nextPos);
+	 	}
+	 	
 	 
 	 inpDisabled = false;
  }
  
- public void placeFruit(Point2D spwPos) {
-	 
+ public void placeFruit(GraphicsContext gc) {
+	 Point2D fruitPos = snake.dropFruit();
+	 Python.drawFruit(gc, new Point2D(fruitPos.getX(), fruitPos.getY()), fColor);
  }
  
- public void eatFruit() {
-	 
+ public void eatFruit(GraphicsContext gc, String color, Point2D pos) {
+	 if(snake.detectSnakeEatFruit(pos)) {
+		 //eat the fruit yo
+		 snake.snakeEatFruit(pos);
+		 Python.paintSplatter(gc, color, pos);
+		 fColor = Python.pickFruitColor(colors, fColor);
+		 placeFruit(gc);
+	 }
  }
  
- public void eatSelf() {
+ public void eatSelf(Point2D pos) {
 	 //Oroboros
- }
- 
- public void paintSplatter(GraphicsContext gc, ArrayList<String> colors, Point2D origin) {
-	 int rx, ry, rh, rw;
-	 int ri = (int)(Math.random()*colors.size());
-	 System.out.println("Color: " + colors.get(ri));
-	 gc.setFill(javafx.scene.paint.Paint.valueOf(colors.get(ri)));
-	 
-     //Paint origin
-     for(int i=0; i<10; i++) {
-    	 rx = (int)((Math.random()*10) + origin.getX());
-    	 ry = (int)((Math.random()*10) + origin.getY());
-    	 rw = (int)(Math.random()*25)+5;
-    	 rh = rw;
-    	 gc.fillOval(rx, ry, rw, rh);
-     }
-     //Paint edges
-     for(int i=0; i<30; i++) {
-    	 rx = (int)((Math.random()*50) + origin.getX());
-    	 ry = (int)((Math.random()*50) + origin.getY());
-    	 rw = (int)(Math.random()*15)+2;
-    	 rh = rw;
-    	 gc.fillOval(rx, ry, rw, rh);
-     }
+	 if(snake.detectSnakeEatSnake(pos)) {
+		 timeline.stop();
+		 Alert alert = new Alert(AlertType.INFORMATION);
+		 alert.setTitle("Snake Eater");
+		 alert.setHeaderText("Game Over!");
+		 String s ="I HAVE HAD IT WITH THESE MOTHERFUCKING SNAKES ON THIS MOTHERFUCKING PLANE!";
+		 alert.setContentText(s);
+		 alert.show();
+
+	 }
  }
 
 }
