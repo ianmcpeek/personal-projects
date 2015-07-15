@@ -1,5 +1,6 @@
 package view;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
@@ -21,6 +22,8 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import model.Compass;
@@ -28,7 +31,7 @@ import model.SnakeData;
 
 public class Board extends Application{
 	
-	public static final int PIXEL_SIZE = 15;
+	public static final int PIXEL_SIZE = 20;
 	public static final int BOARD_SIZE = 30;
 	public static final int CANVAS_SIZE = PIXEL_SIZE * BOARD_SIZE;
 	private static boolean inpDisabled;
@@ -103,16 +106,24 @@ public class Board extends Application{
             	if(!inpDisabled) {   	
 	                switch (event.getCode()) {
 		                case UP:
-		                	usrDir = Compass.NORTH;
+		                	if(Compass.NORTH!=Compass.opposite(snake.getDirection())) {
+		                		usrDir = Compass.NORTH;
+		                	}
 		                	break;
 		                case DOWN:
-		                	usrDir = Compass.SOUTH;
+		                	if(Compass.SOUTH!=Compass.opposite(snake.getDirection())) {
+		                		usrDir = Compass.SOUTH;
+		                	}
 		                	break;
 		                case LEFT:
-		                	usrDir = Compass.WEST;
+		                	if(Compass.WEST!=Compass.opposite(snake.getDirection())) {
+		                		usrDir = Compass.WEST;
+		                	}
 		                	break;
 		                case RIGHT:
-		                	usrDir = Compass.EAST;
+		                	if(Compass.EAST!=Compass.opposite(snake.getDirection())) {
+		                		usrDir = Compass.EAST;
+		                	}
 		                	break;
 	                }
             	}
@@ -130,7 +141,7 @@ public class Board extends Application{
  
  //snake animations
  public void placeSnake(GraphicsContext gc, Point2D spwPos) {
-	 gc.setFill(javafx.scene.paint.Paint.valueOf("DARKGREEN"));
+	 //gc.setFill(javafx.scene.paint.Paint.valueOf("DARKGREEN"));
 	 //Initialize snake
 	 snake = new SnakeData(spwPos);
 	 
@@ -143,9 +154,9 @@ public class Board extends Application{
  public void advanceSnake(GraphicsContext gc, GraphicsContext gcFruit, Point2D currPos) {
 	 inpDisabled = true;
 	 //check if user input is valid
-	 if(usrDir != Compass.opposite(snake.getDirection())) {
+	 //if(usrDir != Compass.opposite(snake.getDirection())) {
 		 snake.setDirection(usrDir);
-	 }
+	 //}
 	 
 	 Point2D nextPos = SnakeData.nextPosition(snake.getDirection(), currPos);
 	 //check for collision
@@ -193,6 +204,7 @@ public class Board extends Application{
 	 if(snake.detectSnakeEatFruit(pos)) {
 		 //eat the fruit yo
 		 snake.snakeEatFruit(pos);
+		 gc.clearRect(pos.getX(), pos.getY(), PIXEL_SIZE, PIXEL_SIZE);
 		 Python.paintSplatter(gc, color, pos);
 		 fColor = Python.pickFruitColor(colors, fColor);
 		 placeFruit(gc);
@@ -209,6 +221,12 @@ public class Board extends Application{
 		 String s ="I HAVE HAD IT WITH THESE MOTHERFUCKING SNAKES ON THIS MOTHERFUCKING PLANE!";
 		 alert.setContentText(s);
 		 alert.show();
+		 
+		 String musicFile = "enough.wav";
+
+		 Media sound = new Media(new File(musicFile).toURI().toString());
+		 MediaPlayer mediaPlayer = new MediaPlayer(sound);
+		 mediaPlayer.play();
 
 	 }
  }

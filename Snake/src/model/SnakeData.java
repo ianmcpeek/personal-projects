@@ -11,7 +11,7 @@ public class SnakeData {
 	//snake body bitboard
 	//fruit bitboard
 	
-	private static final int FOOD_NUTRITION = 10;
+	private static final int FOOD_NUTRITION = 3;
 	
 	private Compass dir;
 	private ArrayList<Point2D> snake;
